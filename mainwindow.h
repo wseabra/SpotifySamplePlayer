@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
+#include "track.h"
 
 #include <spotify.h>
 
@@ -20,5 +22,8 @@ public:
 private:
     Ui::MainWindow *ui;
     Spotify *m_spotify;
+private slots:
+    void onAccessGranted();
+    void onSearchFinished(QVector<Track> trackList);
 };
 #endif // MAINWINDOW_H
