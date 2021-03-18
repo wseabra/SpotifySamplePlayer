@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "Testing";
     ui->setupUi(this);
 
+    m_playlists = new PlaylistManager();
+
     m_spotify = new Spotify(this,"7520ad3e20044620af7b1b533e1be843","e7725197cf914057a4d6c5b06c4888fd");
     m_spotify->grant();
 
@@ -29,7 +31,6 @@ void MainWindow::onAccessGranted()
 
 void MainWindow::onSearchFinished(QVector<Track> trackList)
 {
-    //qDebug() << trackList.object();
 }
 
 

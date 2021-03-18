@@ -11,11 +11,13 @@ CONFIG += c++11 console
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    playlistmanager.cpp \
     spotify.cpp \
     track.cpp
 
 HEADERS += \
     mainwindow.h \
+    playlistmanager.h \
     spotify.h \
     track.h
 

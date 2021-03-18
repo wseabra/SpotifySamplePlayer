@@ -7,6 +7,8 @@ class Track
 {
 public:
     Track();
+    Track(QString trackId, QString name, QString album,
+          QString artist, QString image, QString previewUrl);
     QString trackId; //[items][n][id]
     QString name;//[items][n][name]
     QString album;//[items][n][album][name]

@@ -73,7 +73,7 @@ void Spotify::onSearchFinished(QNetworkReply *reply)
    emit searchFinished(resultVector);
 }
 
-QVector<Track> Spotify::processSearchResult(QJsonDocument result)
+QVector<Track> Spotify::processSearchResult(const QJsonDocument &result)
 {
     qDebug() << "Processing search result";
 

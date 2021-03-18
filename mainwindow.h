@@ -5,7 +5,8 @@
 #include <QVector>
 #include "track.h"
 
-#include <spotify.h>
+#include "spotify.h"
+#include "playlistmanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,6 +23,7 @@ public:
 private:
     Ui::MainWindow *ui;
     Spotify *m_spotify;
+    PlaylistManager *m_playlists;
 private slots:
     void onAccessGranted();
     void onSearchFinished(QVector<Track> trackList);

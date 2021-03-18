@@ -23,7 +23,7 @@ private:
     QString clientSecret;
     QOAuth2AuthorizationCodeFlow oAuth2Spotify;
     void onSearchFinished(QNetworkReply *reply);
-    QVector<Track> processSearchResult(QJsonDocument result);
+    QVector<Track> processSearchResult(const QJsonDocument &result);
     bool checkTrackData(Track track);
 private slots:
     void onAccessGranted();
