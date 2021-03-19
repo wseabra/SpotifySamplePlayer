@@ -71,6 +71,7 @@ void Spotify::onSearchFinished(QNetworkReply *reply)
    QJsonDocument doc = QJsonDocument::fromJson(data);
    auto resultVector = processSearchResult(doc);
    emit searchFinished(resultVector);
+   reply->deleteLater();
 }
 
 QVector<Track> Spotify::processSearchResult(const QJsonDocument &result)
@@ -95,6 +96,7 @@ QVector<Track> Spotify::processSearchResult(const QJsonDocument &result)
                     trackObj.artist = track.value("artists").toArray().at(0).toObject().value("name").toString();
                     trackObj.image = track.value("album").toObject().value("images").toArray().at(2).toObject().value("url").toString();
                     trackObj.previewUrl = track.value("preview_url").toString();
+                    trackObj.trackLabel = trackObj.name+"; "+trackObj.album+"; "+trackObj.artist;
 
                     if(checkTrackData(trackObj)){
                         resultList.push_back(trackObj);

@@ -15,6 +15,7 @@ public:
     QString artist;//[items][n][artists][0][name]
     QString image;//[items][n][album][images][2][url]
     QString previewUrl;//[items][n][preview_url]
+    QString trackLabel;
 
     void printTrack();
 };

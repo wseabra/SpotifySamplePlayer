@@ -1,4 +1,4 @@
-QT       += core gui network networkauth
+QT       += core gui network networkauth multimediawidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,15 +9,19 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    imagedownloaderhelper.cpp \
     main.cpp \
     mainwindow.cpp \
     playlistmanager.cpp \
+    playqueue.cpp \
     spotify.cpp \
     track.cpp
 
 HEADERS += \
+    imagedownloaderhelper.h \
     mainwindow.h \
     playlistmanager.h \
+    playqueue.h \
     spotify.h \
     track.h
 
