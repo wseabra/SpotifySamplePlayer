@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Spotify Sample Player</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -47,7 +47,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="QueueView"/>
+         <widget class="QListWidget" name="QueueView">
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

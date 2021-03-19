@@ -18,6 +18,7 @@ SOURCES += \
     track.cpp
 
 HEADERS += \
+    constants.h \
     imagedownloaderhelper.h \
     mainwindow.h \
     playlistmanager.h \

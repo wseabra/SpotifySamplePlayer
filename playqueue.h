@@ -16,6 +16,7 @@ public:
     void addPlaylistToQueue(QVector<Track> playlist);
     void addTrackToQueue(Track track);
     void clearQueue();
+    void removeTrackFromQueue(int index);
     void updateIndex(int index);
     void goToTheEndOfTheQueue();
     Track getCurrentTrack();
@@ -36,6 +37,7 @@ signals:
     void queueCleared();
     void indexChanged(int);
     void mediaChanged();
+    void trackRemoved(int);
 };
 
 #endif // PLAYQUEUE_H

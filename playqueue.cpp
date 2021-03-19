@@ -44,6 +44,15 @@ void PlayQueue::clearQueue()
     emit queueCleared();
 }
 
+void PlayQueue::removeTrackFromQueue(int index)
+{
+    if(!m_playlist.media(index).isNull() && index < m_PlayQueuePanelList.size()) {
+        m_playlist.removeMedia(index);
+        m_PlayQueuePanelList.removeAt(index);
+        emit trackRemoved(index);
+    }
+}
+
 void PlayQueue::updateIndex(int index)
 {
     m_playlist.setCurrentIndex(index);

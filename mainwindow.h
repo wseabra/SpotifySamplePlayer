@@ -37,6 +37,7 @@ private:
     PlayQueue m_queue;
 
     void doSearch();
+
 private slots:
     void onAccessGranted();
     void onSearchFinished(QVector<Track> trackList);
@@ -47,6 +48,7 @@ private slots:
 
     void onPlayTrackSelectedFromExplorer();
     void onAddTrackSelectedFromExplorer();
+    void onAddAllSelectedFromExplorer();
 
     void on_SearchButton_clicked();
     void on_SearchLineEdit_returnPressed();
@@ -58,9 +60,16 @@ private slots:
     void onDownloadCoverFinished(QImage image);
 
     void onTrackAddedToQueue(Track track);
+    void onAddedPlaylistToQueue(QVector<Track> playlist);
     void onIndexOfQueueChanged(int index);
     void onPlayingMediaChanged();
+    void onTrackRemovedFromQueue(int index);
+    void onQueueCleared();
 
     void on_QueueView_itemClicked(QListWidgetItem *item);
+    void onPlaySelectedQueueItem();
+    void onRemoveSelectedTrackFromQueue();
+    void onCleanQueueSelected();
+    void on_QueueView_customContextMenuRequested(const QPoint &pos);
 };
 #endif // MAINWINDOW_H
