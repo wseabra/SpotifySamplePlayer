@@ -15,6 +15,7 @@ Track::Track(QString trackId, QString name, QString album,
     image(image),
     previewUrl(previewUrl)
 {
+    trackLabel = name+"; "+album+"; "+artist;
 
 }
 

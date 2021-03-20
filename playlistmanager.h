@@ -1,30 +1,39 @@
 #ifndef PLAYLISTMANAGER_H
 #define PLAYLISTMANAGER_H
 
+#include <QObject>
 #include <QFile>
 #include <QString>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QVector>
 
 #include "track.h"
+#include "constants.h"
 
-#define PLAYLIST_FILE "playlists.json"
 
-class PlaylistManager
+class PlaylistManager : public QObject
 {
+    Q_OBJECT
 public:
-    PlaylistManager();
-    void createPlaylist(QString name);
-    void addTrackToPlaylist(int playlistIndex, Track track);
-    void removeTrackFromPlaylist(int playlistIndex, int trackIndex);
+    PlaylistManager(QObject *parent);
+    ~PlaylistManager();
+    bool loadPlaylistsFromFile();
+    void createPlaylist(QString name,QVector<Track> newPlaylist);
     void deletePlaylist(int playlistIndex);
+    Playlist getPlaylistByIndex(int index);
 private:
     QFile playlistFile;
     QJsonDocument playlists;
+    QVector<Playlist> *m_playlistsVector_ptr;
 
-    bool loadPlaylistsFromFile(QJsonDocument &playlists);
-    bool writePlaylistsToFile(const QJsonDocument &playlists);
+    void processPlaylists();
+    bool writePlaylistsToFile();
+signals:
+    void playlistsLoaded(QVector<Playlist>*);
+    void playlistAdded(QString);
+    void playlistDeleted(int);
 };
 
 #endif // PLAYLISTMANAGER_H

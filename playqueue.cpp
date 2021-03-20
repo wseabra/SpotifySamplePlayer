@@ -3,11 +3,9 @@
 PlayQueue::PlayQueue()
 {
 
+    m_playlist.setCurrentIndex(0);
     connect(&m_playlist,&QMediaPlaylist::currentIndexChanged,this,&PlayQueue::onCurrentIndexUpdated);
     connect(&m_playlist,&QMediaPlaylist::currentMediaChanged,this,&PlayQueue::onCurrentMediaChanged);
-
-    m_playlist.setCurrentIndex(0);
-
 }
 
 void PlayQueue::replacePlayQueue(QVector<Track> playlist)

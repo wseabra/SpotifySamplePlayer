@@ -12,36 +12,44 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug() << "Testing";
     ui->setupUi(this);
 
-    m_playlists = new PlaylistManager();
+    m_playlists_ptr = new PlaylistManager(this);
 
-    m_spotify = new Spotify(this,"7520ad3e20044620af7b1b533e1be843","e7725197cf914057a4d6c5b06c4888fd");
-    m_spotify->grant();
+    m_spotify_ptr = new Spotify(this,CLIENT_ID,CLIENT_SECRET);
+    m_spotify_ptr->grant();
 
     connect(&m_imageDownloader,&ImageDownloaderHelper::downloadFinished,this,&MainWindow::onDownloadCoverFinished);
 
-    connect(m_spotify,&Spotify::accessGranted,this,&MainWindow::onAccessGranted);
-    connect(m_spotify,&Spotify::searchFinished,this,&MainWindow::onSearchFinished);
+    connect(m_spotify_ptr,&Spotify::accessGranted,this,&MainWindow::onAccessGranted);
+    connect(m_spotify_ptr,&Spotify::searchFinished,this,&MainWindow::onSearchFinished);
 
-    auto& playlistObject = m_queue.getPlaylist();
+    m_queue_ptr = new PlayQueue();
+    auto& playlistObject = m_queue_ptr->getPlaylist();
     m_mediaPlayer.setPlaylist(&playlistObject);
 
     connect(&m_mediaPlayer,&QMediaPlayer::stateChanged,this,&MainWindow::onMediaStateChanged);
     connect(&m_mediaPlayer,&QMediaPlayer::durationChanged,this,&MainWindow::onMediaPlayerDurationChanged);
     connect(&m_mediaPlayer,&QMediaPlayer::positionChanged,this,&MainWindow::onMediaPlayerPositionChanged);
 
-    connect(&m_queue,&PlayQueue::addedTrackToQueue,this,&MainWindow::onTrackAddedToQueue);
-    connect(&m_queue,&PlayQueue::indexChanged,this,&MainWindow::onIndexOfQueueChanged);
-    connect(&m_queue,&PlayQueue::mediaChanged,this,&MainWindow::onPlayingMediaChanged);
-    connect(&m_queue,&PlayQueue::addedPlaylistToQueue,this,&MainWindow::onAddedPlaylistToQueue);
-    connect(&m_queue,&PlayQueue::trackRemoved,this,&MainWindow::onTrackRemovedFromQueue);
-    connect(&m_queue,&PlayQueue::queueCleared,this,&MainWindow::onQueueCleared);
+    connect(m_queue_ptr,&PlayQueue::addedTrackToQueue,this,&MainWindow::onTrackAddedToQueue);
+    connect(m_queue_ptr,&PlayQueue::indexChanged,this,&MainWindow::onIndexOfQueueChanged);
+    connect(m_queue_ptr,&PlayQueue::mediaChanged,this,&MainWindow::onPlayingMediaChanged);
+    connect(m_queue_ptr,&PlayQueue::addedPlaylistToQueue,this,&MainWindow::onAddedPlaylistToQueue);
+    connect(m_queue_ptr,&PlayQueue::trackRemoved,this,&MainWindow::onTrackRemovedFromQueue);
+    connect(m_queue_ptr,&PlayQueue::queueCleared,this,&MainWindow::onQueueCleared);
+
+    connect(m_playlists_ptr,&PlaylistManager::playlistAdded,this,&MainWindow::onPlaylistCreated);
+    connect(m_playlists_ptr,&PlaylistManager::playlistsLoaded,this,&MainWindow::onPlaylistsLoaded);
+    connect(m_playlists_ptr,&PlaylistManager::playlistDeleted,this,&MainWindow::onPlaylistDeleted);
+
+    m_playlists_ptr->loadPlaylistsFromFile();
 
 }
 
 MainWindow::~MainWindow()
 {
-    delete m_spotify;
-    delete m_playlists;
+    delete m_spotify_ptr;
+    delete m_playlists_ptr;
+    delete m_queue_ptr;
     delete ui;
 }
 
@@ -49,7 +57,25 @@ void MainWindow::doSearch()
 {
     QString query;
     query = ui->SearchLineEdit->text();
-    m_spotify->searchTrack(query);
+    m_spotify_ptr->searchTrack(query);
+}
+
+void MainWindow::addItemsToExplore(QVector<Track> playlist)
+{
+    ui->ExploreView->clear();
+    foreach (auto track, playlist) {
+        ui->ExploreView->addItem(track.trackLabel);
+    }
+    m_ExplorePanelList.swap(playlist);
+
+}
+
+void MainWindow::movePlayListToExplore()
+{
+   int row = ui->PlaylistsView->currentRow();
+   Playlist selectedPlaylist = m_playlists_ptr->getPlaylistByIndex(row);
+   addItemsToExplore(selectedPlaylist.list);
+   ui->ExploreLabel->setText(selectedPlaylist.name);
 }
 
 void MainWindow::onAccessGranted()
@@ -59,11 +85,8 @@ void MainWindow::onAccessGranted()
 
 void MainWindow::onSearchFinished(QVector<Track> trackList)
 {
-    ui->ExploreView->clear();
-    foreach (auto track, trackList) {
-        ui->ExploreView->addItem(track.trackLabel);
-    }
-    m_ExplorePanelList.swap(trackList);
+    addItemsToExplore(trackList);
+    ui->ExploreLabel->setText(SEARCH_RESULT);
 }
 
 void MainWindow::on_SearchButton_clicked()
@@ -80,8 +103,8 @@ void MainWindow::onPlayTrackSelectedFromExplorer()
 {
     int row = ui->ExploreView->currentRow();
     Track track = m_ExplorePanelList[row];
-    m_queue.addTrackToQueue(track);
-    m_queue.goToTheEndOfTheQueue();
+    m_queue_ptr->addTrackToQueue(track);
+    m_queue_ptr->goToTheEndOfTheQueue();
     m_mediaPlayer.play();
 }
 
@@ -90,12 +113,12 @@ void MainWindow::onAddTrackSelectedFromExplorer()
     int row = ui->ExploreView->currentRow();
     Track track = m_ExplorePanelList[row];
 
-    m_queue.addTrackToQueue(track);
+    m_queue_ptr->addTrackToQueue(track);
 }
 
 void MainWindow::onAddAllSelectedFromExplorer()
 {
-    m_queue.addPlaylistToQueue(m_ExplorePanelList);
+    m_queue_ptr->addPlaylistToQueue(m_ExplorePanelList);
 }
 
 void MainWindow::on_ExploreView_customContextMenuRequested(const QPoint &pos)
@@ -103,9 +126,9 @@ void MainWindow::on_ExploreView_customContextMenuRequested(const QPoint &pos)
     QPoint globalPos = ui->ExploreView->mapToGlobal(pos);
 
     QMenu myMenu;
-    myMenu.addAction("Play",this,SLOT(onPlayTrackSelectedFromExplorer()));
-    myMenu.addAction("Adicionar a fila",this,SLOT(onAddTrackSelectedFromExplorer()));
-    myMenu.addAction("Adicionar todos a fila",this,SLOT(onAddAllSelectedFromExplorer()));
+    myMenu.addAction(PLAY,this,SLOT(onPlayTrackSelectedFromExplorer()));
+    myMenu.addAction(ADD_TO_QUEUE,this,SLOT(onAddTrackSelectedFromExplorer()));
+    myMenu.addAction(ADD_ALL_TO_QUEUE,this,SLOT(onAddAllSelectedFromExplorer()));
     myMenu.exec(globalPos);
 }
 
@@ -128,13 +151,13 @@ void MainWindow::onMediaStateChanged(QMediaPlayer::State state)
 {
     switch (state) {
     case QMediaPlayer::State::PlayingState :
-        ui->PlayButton->setText("Pause");
+        ui->PlayButton->setText(PAUSE);
        break;
     case QMediaPlayer::State::PausedState :
-        ui->PlayButton->setText("Play");
+        ui->PlayButton->setText(PLAY);
         break;
     case QMediaPlayer::State::StoppedState :
-        ui->PlayButton->setText("Play");
+        ui->PlayButton->setText(PLAY);
         break;
     }
 
@@ -192,7 +215,7 @@ void MainWindow::onIndexOfQueueChanged(int index)
 
 void MainWindow::onPlayingMediaChanged()
 {
-    Track track = m_queue.getCurrentTrack();
+    Track track = m_queue_ptr->getCurrentTrack();
     ui->TrackLabel->setText(track.trackLabel);
     m_imageDownloader.downloadImage(track.image);
 }
@@ -216,20 +239,31 @@ void MainWindow::on_QueueView_itemClicked(QListWidgetItem *item)
 void MainWindow::onPlaySelectedQueueItem()
 {
     int row = ui->QueueView->currentRow();
-    m_queue.updateIndex(row);
+    m_queue_ptr->updateIndex(row);
     if (m_mediaPlayer.state() != QMediaPlayer::State::PlayingState)
         m_mediaPlayer.play();
+}
+
+void MainWindow::onCreatePlaylistSelected()
+{
+    bool ok;
+    QString text = QInputDialog::getText(this, tr(CREATE_PLAYLIST),
+                                         tr(PLAYLIST_NAME), QLineEdit::Normal,
+                                         tr(NEW_PLAYLIST), &ok);
+    if (ok && !text.isEmpty()){
+        m_playlists_ptr->createPlaylist(text,m_queue_ptr->getPlaylistVector());
+    }
 }
 
 void MainWindow::onRemoveSelectedTrackFromQueue()
 {
     int row = ui->QueueView->currentRow();
-    m_queue.removeTrackFromQueue(row);
+    m_queue_ptr->removeTrackFromQueue(row);
 }
 
 void MainWindow::onCleanQueueSelected()
 {
-    m_queue.clearQueue();
+    m_queue_ptr->clearQueue();
 }
 
 void MainWindow::on_QueueView_customContextMenuRequested(const QPoint &pos)
@@ -237,8 +271,57 @@ void MainWindow::on_QueueView_customContextMenuRequested(const QPoint &pos)
     QPoint globalPos = ui->QueueView->mapToGlobal(pos);
 
     QMenu myMenu;
-    myMenu.addAction("Play",this,SLOT(onPlaySelectedQueueItem()));
-    myMenu.addAction("Remover da fila",this,SLOT(onRemoveSelectedTrackFromQueue()));
-    myMenu.addAction("Limpar fila",this,SLOT(onCleanQueueSelected()));
+    myMenu.addAction(PLAY,this,SLOT(onPlaySelectedQueueItem()));
+    myMenu.addAction(CREATE_PLAYLIST,this,SLOT(onCreatePlaylistSelected()));
+    myMenu.addAction(REMOVE_FROM_QUEUE,this,SLOT(onRemoveSelectedTrackFromQueue()));
+    myMenu.addAction(CLEAN_QUEUE,this,SLOT(onCleanQueueSelected()));
+    myMenu.exec(globalPos);
+}
+
+void MainWindow::onPlaylistCreated(QString name)
+{
+    ui->PlaylistsView->addItem(name);
+}
+
+void MainWindow::onPlaylistsLoaded(QVector<Playlist>* playlistList)
+{
+    for (int i = 0; i < playlistList->size(); i++)
+    {
+        Playlist playlist = playlistList->at(i);
+        ui->PlaylistsView->addItem(playlist.name);
+    }
+}
+
+void MainWindow::onPlaylistDeleted(int index)
+{
+    auto item = ui->PlaylistsView->takeItem(index);
+    delete item;
+}
+
+void MainWindow::on_PlaylistsView_itemClicked(QListWidgetItem *item)
+{
+    movePlayListToExplore();
+}
+
+void MainWindow::onPlayPlaylistSelected()
+{
+    movePlayListToExplore();
+    m_queue_ptr->addPlaylistToQueue(m_ExplorePanelList);
+    m_mediaPlayer.play();
+}
+
+void MainWindow::onDeletePlaylistSelected()
+{
+    int row = ui->PlaylistsView->currentRow();
+    m_playlists_ptr->deletePlaylist(row);
+}
+
+void MainWindow::on_PlaylistsView_customContextMenuRequested(const QPoint &pos)
+{
+    QPoint globalPos = ui->PlaylistsView->mapToGlobal(pos);
+
+    QMenu myMenu;
+    myMenu.addAction(PLAY,this,SLOT(onPlayPlaylistSelected()));
+    myMenu.addAction(DELETE_PLAYLIST,this,SLOT(onDeletePlaylistSelected()));
     myMenu.exec(globalPos);
 }

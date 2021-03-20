@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QVector>
 
+#include "constants.h"
 #include "track.h"
 
 class Spotify : public QObject
