@@ -25,7 +25,7 @@ void PlayQueue::addPlaylistToQueue(QVector<Track> playlist)
         m_PlayQueuePanelList.push_back(track);
         m_playlist.addMedia(QUrl(track.previewUrl));
     }
-    emit addedPlaylistToQueue(m_PlayQueuePanelList);
+    emit addedPlaylistToQueue(playlist);
 }
 
 void PlayQueue::addTrackToQueue(Track track)
