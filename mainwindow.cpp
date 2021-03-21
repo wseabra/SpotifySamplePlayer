@@ -151,6 +151,17 @@ void MainWindow::on_PlayButton_clicked()
     }
 }
 
+
+void MainWindow::on_PrevButton_clicked()
+{
+    m_queue_ptr->gotoPrevSong();
+}
+
+void MainWindow::on_NextButton_clicked()
+{
+   m_queue_ptr->gotoNextSong();
+}
+
 void MainWindow::onMediaStateChanged(QMediaPlayer::State state)
 {
     switch (state) {

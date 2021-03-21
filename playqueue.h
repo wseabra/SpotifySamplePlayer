@@ -32,6 +32,12 @@ public:
     //This function updates the current track from the playlist to index
     void updateIndex(int index);
 
+    //This function updates the current track from the playlist to the next one
+    void gotoNextSong();
+
+    //This function updates the current track from the playlist to the previous one
+    void gotoPrevSong();
+
     //This function set the end of the Queue as the current track
     void goToTheEndOfTheQueue();
 

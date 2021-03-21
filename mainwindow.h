@@ -82,6 +82,8 @@ private slots:
     void on_SearchButton_clicked();
     void on_SearchLineEdit_returnPressed();
     void on_PlayButton_clicked();
+    void on_PrevButton_clicked();
+    void on_NextButton_clicked();
     void on_TrackProgress_sliderMoved(int position);
     void on_ExploreView_itemDoubleClicked(QListWidgetItem *item);
 

@@ -56,6 +56,16 @@ void PlayQueue::updateIndex(int index)
     m_playlist.setCurrentIndex(index);
 }
 
+void PlayQueue::gotoNextSong()
+{
+    m_playlist.next();
+}
+
+void PlayQueue::gotoPrevSong()
+{
+    m_playlist.previous();
+}
+
 void PlayQueue::goToTheEndOfTheQueue()
 {
     m_playlist.setCurrentIndex(m_PlayQueuePanelList.size() -1);

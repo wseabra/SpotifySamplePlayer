@@ -120,9 +120,23 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="PrevButton">
+        <property name="text">
+         <string>Anterior</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="PlayButton">
         <property name="text">
          <string>Play</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="NextButton">
+        <property name="text">
+         <string>Próxima</string>
         </property>
        </widget>
       </item>
