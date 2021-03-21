@@ -4,6 +4,8 @@ This application opens your default browser to ask for your login on spotify, it
 
 Using this application you'll be able to search for songs on spotify on your default market (your account region), add tracks to the queue e play their 30 seconds samples and manage offline playlists with song samples.
 
+obs: Not all songs have the url for their samples, they are filtered from the search result.
+
 ![](images/SSP_screenshot.png)
 
 ## Dependencies:
