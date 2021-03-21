@@ -30,39 +30,65 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    //Spotify controller pointer
     Spotify *m_spotify_ptr;
+
+    //Playlists controller pointer
     PlaylistManager *m_playlists_ptr;
+
+    //Data vector for the explore panel
     QVector<Track> m_ExplorePanelList;
+
+    //Current track information
     Track m_playingTrack;
+
+    //Media player
     QMediaPlayer m_mediaPlayer;
+
+    //Helper for downloading track covers
     ImageDownloaderHelper m_imageDownloader;
+
+    //Queue controller pointer
     PlayQueue *m_queue_ptr;
 
+    //This function executes spotify search
     void doSearch();
+
+    //This function updates items in the explore panel
     void addItemsToExplore(QVector<Track> playlist);
+
+    //This function moves a playlist to the explore panel
     void movePlayListToExplore();
 
+//Slots beggining with on_ are created by QTCreator, you will not find the connect on the cpp file
 private slots:
+    //Spotify API slots
     void onAccessGranted();
     void onSearchFinished(QVector<Track> trackList);
 
+    //Media control slots
     void onMediaStateChanged(QMediaPlayer::State state);
     void onMediaPlayerDurationChanged(qint64 duration);
     void onMediaPlayerPositionChanged(qint64 position);
 
+    //Explore panel slots
     void onPlayTrackSelectedFromExplorer();
     void onAddTrackSelectedFromExplorer();
     void onAddAllSelectedFromExplorer();
+    void on_ExploreView_customContextMenuRequested(const QPoint &pos);
 
+    //Ui slots
     void on_SearchButton_clicked();
     void on_SearchLineEdit_returnPressed();
-    void on_ExploreView_customContextMenuRequested(const QPoint &pos);
     void on_PlayButton_clicked();
     void on_TrackProgress_sliderMoved(int position);
     void on_ExploreView_itemDoubleClicked(QListWidgetItem *item);
 
+    //Image helper slot
     void onDownloadCoverFinished(QImage image);
 
+    //Queue control slots
     void onTrackAddedToQueue(Track track);
     void onAddedPlaylistToQueue(QVector<Track> playlist);
     void onIndexOfQueueChanged(int index);
@@ -73,10 +99,12 @@ private slots:
     void on_QueueView_itemClicked(QListWidgetItem *item);
     void onPlaySelectedQueueItem();
     void onCreatePlaylistSelected();
+    void onUpdatePlaylistSelected();
     void onRemoveSelectedTrackFromQueue();
     void onCleanQueueSelected();
     void on_QueueView_customContextMenuRequested(const QPoint &pos);
 
+    //Playlist control slots
     void onPlaylistCreated(QString name);
     void onPlaylistsLoaded(QVector<Playlist>* playlistList);
     void onPlaylistDeleted(int index);

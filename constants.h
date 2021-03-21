@@ -32,6 +32,7 @@ typedef struct {
 #define DELETE_PLAYLIST "Apagar playlist"
 #define PLAYLIST_NAME "Nome da playlist:"
 #define NEW_PLAYLIST "Nova playlist"
+#define UPDATE_PLAYLIST "Atualizar playlist"
 
 
 //Json fields

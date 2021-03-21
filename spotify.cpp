@@ -8,6 +8,7 @@ Spotify::Spotify(QObject *parent, QString clientId, QString clientSecret):
     clientId(clientId),
     clientSecret(clientSecret)
 {
+    //Configuring the authentication object
     auto replyHandler = new QOAuthHttpServerReplyHandler(8080, this);
     replyHandler->setCallbackPath("callback");
     oAuth2Spotify.setReplyHandler(replyHandler);
@@ -17,7 +18,7 @@ Spotify::Spotify(QObject *parent, QString clientId, QString clientSecret):
     oAuth2Spotify.setClientIdentifier(clientId);
     oAuth2Spotify.setScope(SPOTIFY_SCOPE);
 
-
+    //COnnecting signals of the authorization object
     connect(&oAuth2Spotify, &QOAuth2AuthorizationCodeFlow::authorizeWithBrowser,
                  &QDesktopServices::openUrl);
     connect(&oAuth2Spotify, &QOAuth2AuthorizationCodeFlow::statusChanged, this,
@@ -37,6 +38,7 @@ void Spotify::searchTrack(QString searchTerm)
     QNetworkReply *reply = oAuth2Spotify.get(searchUrl);
     qDebug() << "Searching tracks. Term: "+searchTerm+" url: "+searchUrl.toString();
 
+    //once the reply arrives call the onSeachFinished method
     connect(reply,&QNetworkReply::finished,this,[=]() {
         onSearchFinished(reply);
     });
@@ -67,6 +69,7 @@ void Spotify::onSearchFinished(QNetworkReply *reply)
        qDebug() << "error:" << reply->errorString();
        return;
    }
+   //turn the response into json and call method to proccess it
    QByteArray data = reply->readAll();
    QJsonDocument doc = QJsonDocument::fromJson(data);
    auto resultVector = processSearchResult(doc);
@@ -80,11 +83,13 @@ QVector<Track> Spotify::processSearchResult(const QJsonDocument &result)
 
     QJsonObject root = result.object();
     QVector<Track> resultList;
+    //transforming json result into vector of tracks
     if (root.contains(TRACKS_FIELD)) {
         auto tracks = root.value(TRACKS_FIELD);
         if (tracks.isObject() && tracks.toObject().contains(ITEMS_FIELD)){
             auto tracksArray = tracks.toObject().value(ITEMS_FIELD);
             if (tracksArray.isArray()) {
+                //loop tracks array, for each track create object and add to the result
                 for (int index = 0; index < tracksArray.toArray().size(); index++) {
                     auto trackItem = tracksArray.toArray().at(index);
                     QJsonObject track = trackItem.toObject();
@@ -93,7 +98,8 @@ QVector<Track> Spotify::processSearchResult(const QJsonDocument &result)
                     QString name = track.value(NAME_FIELD).toString();
                     QString album = track.value(ALBUM_FIELD).toObject().value(NAME_FIELD).toString();
                     QString artist = track.value(ARTISTS_FIELD).toArray().at(0).toObject().value(NAME_FIELD).toString();
-                    QString image = track.value(ALBUM_FIELD).toObject().value(IMAGES_FIELD).toArray().at(2).toObject().value(URL_FIELD).toString();
+                    QString image = track.value(ALBUM_FIELD).toObject()
+                            .value(IMAGES_FIELD).toArray().at(2).toObject().value(URL_FIELD).toString();
                     QString previewUrl = track.value(PREVIEW_URL_FIELD).toString();
 
                     Track trackObj(trackId,name,album,artist,image,previewUrl);

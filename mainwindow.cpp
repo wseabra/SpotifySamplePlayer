@@ -17,19 +17,23 @@ MainWindow::MainWindow(QWidget *parent)
     m_spotify_ptr = new Spotify(this,CLIENT_ID,CLIENT_SECRET);
     m_spotify_ptr->grant();
 
+    //Connects for http requests
     connect(&m_imageDownloader,&ImageDownloaderHelper::downloadFinished,this,&MainWindow::onDownloadCoverFinished);
 
     connect(m_spotify_ptr,&Spotify::accessGranted,this,&MainWindow::onAccessGranted);
     connect(m_spotify_ptr,&Spotify::searchFinished,this,&MainWindow::onSearchFinished);
 
+    //Initialising Queue
     m_queue_ptr = new PlayQueue();
     auto& playlistObject = m_queue_ptr->getPlaylist();
     m_mediaPlayer.setPlaylist(&playlistObject);
 
+    //Connects for the media control
     connect(&m_mediaPlayer,&QMediaPlayer::stateChanged,this,&MainWindow::onMediaStateChanged);
     connect(&m_mediaPlayer,&QMediaPlayer::durationChanged,this,&MainWindow::onMediaPlayerDurationChanged);
     connect(&m_mediaPlayer,&QMediaPlayer::positionChanged,this,&MainWindow::onMediaPlayerPositionChanged);
 
+    //Connects for the Queue management
     connect(m_queue_ptr,&PlayQueue::addedTrackToQueue,this,&MainWindow::onTrackAddedToQueue);
     connect(m_queue_ptr,&PlayQueue::indexChanged,this,&MainWindow::onIndexOfQueueChanged);
     connect(m_queue_ptr,&PlayQueue::mediaChanged,this,&MainWindow::onPlayingMediaChanged);
@@ -37,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_queue_ptr,&PlayQueue::trackRemoved,this,&MainWindow::onTrackRemovedFromQueue);
     connect(m_queue_ptr,&PlayQueue::queueCleared,this,&MainWindow::onQueueCleared);
 
+    //COnnects for playlists management
     connect(m_playlists_ptr,&PlaylistManager::playlistAdded,this,&MainWindow::onPlaylistCreated);
     connect(m_playlists_ptr,&PlaylistManager::playlistsLoaded,this,&MainWindow::onPlaylistsLoaded);
     connect(m_playlists_ptr,&PlaylistManager::playlistDeleted,this,&MainWindow::onPlaylistDeleted);
 
     m_playlists_ptr->loadPlaylistsFromFile();
-
 }
 
 MainWindow::~MainWindow()
@@ -255,6 +259,22 @@ void MainWindow::onCreatePlaylistSelected()
     }
 }
 
+void MainWindow::onUpdatePlaylistSelected()
+{
+    QStringList items;
+    int numberOfItens = ui->PlaylistsView->count();
+    for (int i = 0; i < numberOfItens; i++) {
+        items << ui->PlaylistsView->item(i)->text();
+    }
+
+    bool ok;
+    QString item = QInputDialog::getItem(this, tr("QInputDialog::getItem()"),
+                                             tr("Season:"), items, 0, false, &ok);
+    int itemIndex = items.indexOf(item);
+
+    m_playlists_ptr->updatePlaylist(itemIndex,m_queue_ptr->getPlaylistVector());
+}
+
 void MainWindow::onRemoveSelectedTrackFromQueue()
 {
     int row = ui->QueueView->currentRow();
@@ -273,6 +293,7 @@ void MainWindow::on_QueueView_customContextMenuRequested(const QPoint &pos)
     QMenu myMenu;
     myMenu.addAction(PLAY,this,SLOT(onPlaySelectedQueueItem()));
     myMenu.addAction(CREATE_PLAYLIST,this,SLOT(onCreatePlaylistSelected()));
+    myMenu.addAction(UPDATE_PLAYLIST,this,SLOT(onUpdatePlaylistSelected()));
     myMenu.addAction(REMOVE_FROM_QUEUE,this,SLOT(onRemoveSelectedTrackFromQueue()));
     myMenu.addAction(CLEAN_QUEUE,this,SLOT(onCleanQueueSelected()));
     myMenu.exec(globalPos);

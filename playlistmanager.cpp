@@ -5,7 +5,7 @@ PlaylistManager::PlaylistManager(QObject *parent):
 {
     m_playlistsVector_ptr = new QVector<Playlist>();
 
-    playlistFile.setFileName(PLAYLIST_FILE);
+    m_playlistFile.setFileName(PLAYLIST_FILE);
 }
 
 PlaylistManager::~PlaylistManager()
@@ -13,33 +13,41 @@ PlaylistManager::~PlaylistManager()
     delete m_playlistsVector_ptr;
 }
 
-bool PlaylistManager::loadPlaylistsFromFile()
+void PlaylistManager::loadPlaylistsFromFile()
 {
-    if (!playlistFile.open(QIODevice::ReadOnly | QIODevice::Text)){
-        return false;
+    if (!m_playlistFile.open(QIODevice::ReadOnly | QIODevice::Text)){
+        emit playlistsLoaded(m_playlistsVector_ptr);
+        return;
     }
-    playlists = QJsonDocument::fromJson(playlistFile.readAll());
-    playlistFile.close();
+    m_playlists = QJsonDocument::fromJson(m_playlistFile.readAll());
+    m_playlistFile.close();
     processPlaylists();
     emit playlistsLoaded(m_playlistsVector_ptr);
-    return true;
 }
 
 void PlaylistManager::processPlaylists()
 {
-    QJsonObject playlistsObj = playlists.object();
+    QJsonObject playlistsObj = m_playlists.object();
+
+    if (!playlistsObj.contains(PLAYLISTS_FIELD))
+        return;
+
     auto playlistsArray = playlistsObj.value(PLAYLISTS_FIELD).toArray();
 
+    //Loop's the playlist array
     for (int playlistIndex = 0; playlistIndex < playlistsArray.size(); playlistIndex++) {
         Playlist newPlaylist;
 
         QJsonObject playlistObject = playlistsArray.at(playlistIndex).toObject();
+
         newPlaylist.name = playlistObject.value(NAME_FIELD).toString();
         auto tracksArray = playlistObject.value(TRACKS_FIELD).toArray();
 
+        //Loop's the tracks array
         for (int trackIndex = 0; trackIndex < tracksArray.size(); trackIndex++) {
             QJsonObject trackJson = tracksArray.at(trackIndex).toObject();
 
+            //Getting the track fields to create the track object
             QString trackId = trackJson[TRACK_ID_FIELD].toString();
             QString name = trackJson[NAME_FIELD].toString();
             QString album = trackJson[ALBUM_FIELD].toString();
@@ -55,14 +63,16 @@ void PlaylistManager::processPlaylists()
     }
 }
 
-bool PlaylistManager::writePlaylistsToFile()
+void PlaylistManager::writePlaylistsToFile()
 {
-    if (!playlistFile.open(QIODevice::WriteOnly | QIODevice::Text)){
-        return false;
+    if (!m_playlistFile.open(QIODevice::WriteOnly | QIODevice::Text)){
+        if(m_playlistFile.exists()){
+            m_playlistFile.moveToTrash();
+            m_playlistFile.open(QIODevice::WriteOnly | QIODevice::Text);
+        }
     }
-    playlistFile.write(playlists.toJson());
-    playlistFile.close();
-    return true;
+    m_playlistFile.write(m_playlists.toJson());
+    m_playlistFile.close();
 }
 
 void PlaylistManager::createPlaylist(QString name, QVector<Track> newPlaylist)
@@ -73,10 +83,13 @@ void PlaylistManager::createPlaylist(QString name, QVector<Track> newPlaylist)
     m_playlistsVector_ptr->push_back(newPlaylistObj);
 
 
-    auto playlistsObj = playlists.object();
+    auto playlistsObj = m_playlists.object();
+
     QJsonObject newPlaylistJson;
+
     QJsonArray trackList;
 
+    //for each track create a new json track object
     foreach (auto track, newPlaylist) {
         QJsonObject trackJson;
         trackJson[TRACK_ID_FIELD] = track.trackId;
@@ -86,9 +99,11 @@ void PlaylistManager::createPlaylist(QString name, QVector<Track> newPlaylist)
         trackJson[IMAGE_FIELD] = track.image;
         trackJson[PREVIEW_URL_FIELD] = track.previewUrl;
 
+        //append the new Track to the json track array
         trackList.append(trackJson);
     }
 
+    //Populate the new playlist json object fields
     newPlaylistJson.insert(TRACKS_FIELD,trackList);
     newPlaylistJson.insert(NAME_FIELD,name);
 
@@ -97,7 +112,8 @@ void PlaylistManager::createPlaylist(QString name, QVector<Track> newPlaylist)
     playlistsObj.insert(PLAYLISTS_FIELD,playlistArray);
 
     QJsonDocument newDoc(playlistsObj);
-    playlists = newDoc;
+    m_playlists = newDoc;
+
     writePlaylistsToFile();
 
     emit playlistAdded(newPlaylistObj.name);
@@ -105,19 +121,57 @@ void PlaylistManager::createPlaylist(QString name, QVector<Track> newPlaylist)
 
 void PlaylistManager::deletePlaylist(int playlistIndex)
 {
-    QJsonObject playlistsObj = playlists.object();
+    QJsonObject playlistsObj = m_playlists.object();
     QJsonArray playlistArray = playlistsObj.value(PLAYLISTS_FIELD).toArray();
 
     playlistArray.removeAt(playlistIndex);
 
+    //Updating the playlists array
     playlistsObj[PLAYLISTS_FIELD] = playlistArray;
 
     QJsonDocument newDoc(playlistsObj);
-    playlists = newDoc;
+    m_playlists = newDoc;
 
+    //Removing the playlist from the playlist vector
     m_playlistsVector_ptr->removeAt(playlistIndex);
+
     writePlaylistsToFile();
+
     emit playlistDeleted(playlistIndex);
+}
+
+void PlaylistManager::updatePlaylist(int playlistIndex, QVector<Track> updatedPlaylist)
+{
+    QJsonObject playlistsObj = m_playlists.object();
+    QJsonArray playlistArray = playlistsObj.value(PLAYLISTS_FIELD).toArray();
+
+    QJsonObject playlistObj = playlistArray.at(playlistIndex).toObject();
+    QJsonArray newTrackList;
+
+    foreach (auto track, updatedPlaylist) {
+        QJsonObject trackJson;
+        trackJson[TRACK_ID_FIELD] = track.trackId;
+        trackJson[NAME_FIELD] = track.name;
+        trackJson[ALBUM_FIELD] = track.album;
+        trackJson[ARTIST_FIELD] = track.artist;
+        trackJson[IMAGE_FIELD] = track.image;
+        trackJson[PREVIEW_URL_FIELD] = track.previewUrl;
+
+        //append the new Track to the json track array
+        newTrackList.append(trackJson);
+    }
+    playlistObj.insert(TRACKS_FIELD,newTrackList);
+    playlistArray[playlistIndex] = playlistObj;
+
+    //Updating the playlists arrays
+    playlistsObj[PLAYLISTS_FIELD] = playlistArray;
+
+    (*m_playlistsVector_ptr)[playlistIndex].list = updatedPlaylist;
+
+    QJsonDocument newDoc(playlistsObj);
+    m_playlists = newDoc;
+
+    writePlaylistsToFile();
 }
 
 Playlist PlaylistManager::getPlaylistByIndex(int index)
